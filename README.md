@@ -5,7 +5,7 @@
 <strong>FluentBit + InfluxDB + Grafana ⎈ FIG</strong>
 </p>
 
-![FIG Data Flow](./fFIG-Diagram.drawio.png)
+![FIG Data Flow](./FIG-Diagram.drawio.png)
 
 
 ## TL;DR
