@@ -60,7 +60,7 @@ Specify in Values.yaml:
  
     [INPUT]
         Name cpu
-        Tag  adv_prod_cpu
+        Tag  <your desired tag name>
     [OUTPUT]
         Name          influxdb
         Match         *
