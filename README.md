@@ -76,6 +76,10 @@ Specify in Values.yaml:
         Tag_Keys      method path
 
 
+In case of Influx DB & Grafana Service,
+You can specify service Type as : LoadBalancer if you want to access these in public ip.
+
+
 ## Prerequisites
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [Helm 3](https://helm.sh/docs/intro/install/)
