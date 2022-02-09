@@ -28,12 +28,12 @@ Specify in Values.yaml:
 
 type: influx
   influx:
-    host: <Host IP Address or DNS>
+    host: [Host IP Address or DNS]
     port: 8086
-    bucket: <Influx DB Name>
-    org: <Influx DB Organization Name>
+    bucket: [Influx DB Name]
+    org: [Influx DB Organization Name]
     user: fluentuser
-    token: <Your Influx DB Token>
+    token: [Your Influx DB Token]
     sequence_tag: _seq
   
  AND in configMap.yaml:
