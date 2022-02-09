@@ -18,12 +18,14 @@
 
 How to exclude any path's  log (pod) not to send to influx DB. Example: Any pod in the namespace of kube-system & monitoring.
 Specify in Values.yaml:
+
 path: /var/log/containers/*.log
 excludepath: /var/log/containers/*_monitoring_*.log, /var/log/containers/*_kube-system_*.log
 NOTE: Make sure K8S-Logging.Exclude is On, else exclude path will not work.
 
 How to specify any Influx DB host details which is not running inside cluster.
 Specify in Values.yaml:
+
 type: influx
   influx:
     host: <Host IP Address or DNS>
