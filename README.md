@@ -11,8 +11,8 @@
 
     1. kubectl create ns monitoring
     2. git clone https://github.com/iqrabismi/FIG.git
-    3. helm upgrade --install influxdb influxdb -n monitoring (Install Fluent Bit)
-    4. helm upgrade --install fluent-bit fluent-bit -n monitoring (Install Influx DB)
+    3. helm upgrade --install influxdb influxdb -n monitoring (Install Influx DB)
+    4. helm upgrade --install fluent-bit fluent-bit -n monitoring (Install Fluent Bit)
     5. helm upgrade --install grafana grafana -n monitoring (Install Grafana)
 
 ** Try to use latest verison of Fluent Bit. Here it is used as  version: 1.8
