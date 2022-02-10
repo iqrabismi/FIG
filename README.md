@@ -7,6 +7,11 @@
 
 ![FIG Data Flow](./FIG-Diagram.drawio.png)
 
+
+#Below URL you can validate & visualize the configMap file.
+
+    https://cloud.calyptia.com/visualizer
+
 ##COMMANDS:
 
     1. kubectl create ns monitoring
