@@ -1,0 +1,167 @@
+{{- if (empty .Values.existingConfigMap) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "fluent-bit.fullname" . }}-config
+  labels:
+    app: {{ template "fluent-bit.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+data:
+{{- if .Values.parsers.enabled }}
+        Parsers_File parsers_custom.conf
+{{- end }}
+
+  fluent-bit-input.conf: |
+    [INPUT]
+        Name             tail
+        Path             {{ .Values.input.tail.path }}
+        Exclude_Path     {{ .Values.input.tail.excludepath }}
+        Parser           {{ .Values.input.tail.parser }}
+        Tag              {{ .Values.filter.kubeTag }}
+        Refresh_Interval 5
+        Mem_Buf_Limit    {{ .Values.input.tail.memBufLimit }}
+        Skip_Long_Lines  On
+{{- if .Values.input.tail.ignore_older }}
+        Ignore_Older    {{ .Values.input.tail.ignore_older }}
+{{- end }}
+{{- if .Values.trackOffsets }}
+        DB               /tail-db/tail-containers-state.db
+        DB.Sync          Normal
+{{- end }}
+
+{{ .Values.extraEntries.input | indent 8 }}
+
+  fluent-bit-filter.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               {{ .Values.filter.kubeTag }}.*
+        Kube_Tag_Prefix     {{ .Values.filter.kubeTagPrefix }}
+        Kube_URL            {{ .Values.filter.kubeURL }}
+        Kube_CA_File        {{ .Values.filter.kubeCAFile }}
+        Kube_Token_File     {{ .Values.filter.kubeTokenFile }}
+
+{{- if .Values.filter.mergeJSONLog }}
+        Merge_Log           On
+{{- end }}
+
+{{- if .Values.filter.mergeLogKey }}
+        Merge_Log_Key       {{ .Values.filter.mergeLogKey }}
+{{- end }}
+
+{{- if .Values.filter.enableParser }}
+        K8S-Logging.Parser  On
+{{- end }}
+{{- if .Values.filter.enableExclude }}
+        K8S-Logging.Exclude On
+{{- end }}
+{{- if .Values.filter.useJournal }}
+        Use_Journal         On
+{{- end }}
+{{ .Values.extraEntries.filter | indent 8 }}
+
+  fluent-bit-output.conf: |
+{{- if eq .Values.backend.type "influx" }}
+    [INPUT]
+        Name         cpu
+        Tag          myapiname_cpu
+
+    [INPUT]
+        Name         mem
+        Tag          myapiname_memory
+
+    [INPUT]
+        Name          netif
+        Tag           myapiname_network
+        Interval_sec  1
+        Interval_NSec 0
+        Interface     eth0
+
+    [INPUT]
+        Name          disk
+        Tag           myapiname_disk
+        Interval_Sec  1
+        Interval_NSec 0
+
+
+    [OUTPUT]
+        Name          influxdb
+        Match         *
+        Host          {{ .Values.backend.influx.host }}
+        Port          {{ .Values.backend.influx.port }}
+        Bucket        {{ .Values.backend.influx.bucket }}
+        Org           {{ .Values.backend.influx.org }}
+        Sequence_Tag  {{ .Values.backend.influx.sequence_tag }}
+        HTTP_User     {{ .Values.backend.influx.user }}
+        HTTP_Token    {{ .Values.backend.influx.token }}
+        Tag_Keys      method path
+{{- end }}
+
+{{- if .Values.backend.http.json_date_format }}
+        json_date_format {{ .Values.backend.http.json_date_format }}
+{{- end }}
+{{- range  .Values.backend.http.headers }}
+        Header  {{ . }}
+{{- end }}
+{{ .Values.extraEntries.output | indent 8 }}
+
+
+  fluent-bit.conf: |
+{{ .Values.rawConfig | indent 4 }}
+
+  parsers.conf: |
+{{- if .Values.parsers.regex }}
+{{- range .Values.parsers.regex }}
+    [PARSER]
+        Name        {{ .name }}
+        Format      regex
+        Regex       {{ .regex }}
+{{- if .timeKey }}
+        Time_Key    {{ .timeKey }}
+{{- end }}
+{{- if .timeFormat }}
+        Time_Format {{ .timeFormat }}
+{{- end }}
+{{ end }}
+{{- end }}
+{{- if .Values.parsers.json }}
+{{- range .Values.parsers.json }}
+    [PARSER]
+        Name        {{ .name }}
+        Format      json
+{{- if .timeKeep }}
+        Time_Keep   {{ .timeKeep }}
+{{- end }}
+{{- if .timeKey }}
+        Time_Key    {{ .timeKey }}
+{{- end }}
+{{- if .timeFormat }}
+        Time_Format {{ .timeFormat }}
+{{- end }}
+{{- if .decodeFieldAs  }}
+        Decode_Field_As {{ .decodeFieldAs }} {{ .decodeField | default "log" }}
+{{- end}}
+{{- if .extraEntries }}
+{{ .extraEntries | indent 8 }}
+{{- end }}
+{{ end }}
+{{- end }}
+{{- if .Values.parsers.logfmt }}
+{{- range .Values.parsers.logfmt }}
+    [PARSER]
+        Name        {{ .name }}
+        Format      logfmt
+{{- if .timeKey }}
+        Time_Key    {{ .timeKey }}
+{{- end }}
+{{- if .timeFormat }}
+        Time_Format {{ .timeFormat }}
+{{- end }}
+{{- if .extraEntries }}
+{{ .extraEntries | indent 8 }}
+{{- end }}
+{{ end }}
+{{- end }}
+
+{{- end -}}
