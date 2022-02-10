@@ -28,11 +28,13 @@ data:
     [INPUT]
         Name             tail
         Path             {{ .Values.input.tail.path }}
+        Exclude_Path     {{ .Values.input.tail.excludepath }}
         Parser           {{ .Values.input.tail.parser }}
-        Tag              {{ .Values.filter.kubeTag }}.*
+        Tag              {{ .Values.filter.kubeTag }}
         Refresh_Interval 5
         Mem_Buf_Limit    {{ .Values.input.tail.memBufLimit }}
         Skip_Long_Lines  On
+
 {{- if .Values.input.tail.ignore_older }}
         Ignore_Older    {{ .Values.input.tail.ignore_older }}
 {{- end }}
@@ -77,6 +79,7 @@ data:
         Kube_URL            {{ .Values.filter.kubeURL }}
         Kube_CA_File        {{ .Values.filter.kubeCAFile }}
         Kube_Token_File     {{ .Values.filter.kubeTokenFile }}
+        #K8S-Logging.Exclude On
 {{- if .Values.filter.mergeJSONLog }}
         Merge_Log           On
 {{- end }}
@@ -104,18 +107,51 @@ data:
         Path /tmp/fluent-bit.log
 {{ else if eq .Values.backend.type "influx" }}
     [INPUT]
-        Name cpu
-        Tag  my_cpu
+        Name         cpu
+        Tag          myapiname_cpu
+
+    [INPUT]
+        Name         mem
+        Tag          myapiname_memory
+
+    [INPUT]
+        Name          netif
+        Tag           myapiname_network
+        Interval_sec  1
+        Interval_NSec 0
+        Interface     eth0
+
+    [INPUT]
+        Name          disk
+        Tag           myapiname_disk
+        Interval_Sec  1
+        Interval_NSec 0
+
+    #If the InfluxDB is outside of K8S Cluster, then use the below [OUTPUT]
     [OUTPUT]
         Name          influxdb
         Match         *
         Host          {{ .Values.backend.influx.host }}
         Port          {{ .Values.backend.influx.port }}
-        Database      {{ .Values.backend.influx.database }}
+        Bucket        {{ .Values.backend.influx.bucket }}
+        Org           {{ .Values.backend.influx.org }}
         Sequence_Tag  {{ .Values.backend.influx.sequence_tag }}
         HTTP_User     {{ .Values.backend.influx.user }}
-        HTTP_Passwd   {{ .Values.backend.influx.password }}
+        HTTP_Token    {{ .Values.backend.influx.token }}
         Tag_Keys      method path
+        
+     #If the InfluxDB is insidee of K8S Cluster, then uncomment the below [OUTPUT], comment the above output
+     #[OUTPUT]
+     #   Name          influxdb
+     #   Match         *
+     #   Host          {{ .Values.backend.influx.host }}
+     #   Port          {{ .Values.backend.influx.port }}
+     #   Database      {{ .Values.backend.influx.database }}
+     #   Sequence_Tag  {{ .Values.backend.influx.sequence_tag }}
+     #   HTTP_User     {{ .Values.backend.influx.user }}
+     #   HTTP_Passwd   {{ .Values.backend.influx.password }}
+     #   Tag_Keys      method path
+        
 {{ else if eq .Values.backend.type "forward" }}
     [OUTPUT]
         Name          forward
